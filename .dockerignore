@@ -1,0 +1,23 @@
+# Git files
+.git
+.gitignore
+
+# Documentation
+README.md
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Build artifacts
+build/
+install/
+log/
+
+# Mac specific
+.DS_Store
+
+# Test files (we want source code in the image)
+# test_system.sh is included for in-container testing 

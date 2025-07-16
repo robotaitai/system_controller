@@ -1,0 +1,37 @@
+# ROS 2 build artifacts
+build/
+install/
+log/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Compiled binaries
+*.o
+*.so
+*.dylib
+*.exe
+test_core_classes
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+
+# Backup files
+*~
+*.bak
+
+# Docker volumes (if any)
+.docker-volumes/ 

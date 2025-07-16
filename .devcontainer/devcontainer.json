@@ -1,0 +1,28 @@
+{
+    "name": "ROS 2 System Controller",
+    "image": "osrf/ros:humble-desktop",
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {},
+        "ghcr.io/devcontainers/features/git:1": {}
+    },
+    "runArgs": ["--privileged"],
+    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y python3-colcon-common-extensions",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-python.python",
+                "ms-vscode.cmake-tools",
+                "ms-iot.vscode-ros"
+            ]
+        }
+    },
+    "workspaceFolder": "/workspace",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+    "forwardPorts": [11311, 11345],
+    "portsAttributes": {
+        "11311": {
+            "label": "ROS Master"
+        }
+    }
+} 

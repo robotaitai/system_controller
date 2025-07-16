@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  ros2-system-controller:
+    build: .
+    container_name: ros2-system-controller
+    tty: true
+    stdin_open: true
+    network_mode: host
+    environment:
+      - DISPLAY=${DISPLAY:-:0}  # For X11 forwarding (optional)
+      - ROS_DOMAIN_ID=0
+    volumes:
+      # Mount source code for live editing
+      - ./src:/ros2_ws/src:rw
+      # Mount build and install directories for persistence (optional)
+      - ros2_build:/ros2_ws/build
+      - ros2_install:/ros2_ws/install
+      - ros2_log:/ros2_ws/log
+      # X11 forwarding for GUI tools (macOS with XQuartz)
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    working_dir: /ros2_ws
+    command: bash
+    # Uncomment for privileged access if needed for hardware interfaces
+    # privileged: true
+    # devices:
+    #   - /dev:/dev
+
+  # Optional: RViz2 service for visualization (requires X11 forwarding)
+  rviz2:
+    build: .
+    container_name: ros2-rviz2
+    tty: true
+    stdin_open: true
+    network_mode: host
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - ROS_DOMAIN_ID=0
+    volumes:
+      - ./src:/ros2_ws/src:ro
+      - ros2_build:/ros2_ws/build:ro
+      - ros2_install:/ros2_ws/install:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    working_dir: /ros2_ws
+    command: bash -c "source install/setup.bash && rviz2"
+    depends_on:
+      - ros2-system-controller
+    profiles:
+      - gui  # Only start with --profile gui
+
+volumes:
+  ros2_build:
+  ros2_install:
+  ros2_log: 
