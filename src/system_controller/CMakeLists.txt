@@ -70,9 +70,33 @@ install(TARGETS
 install(DIRECTORY launch/
   DESTINATION share/${PROJECT_NAME}/launch/)
 
+# Testing
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
+  
+  # Unit tests for core classes
+  ament_add_gtest(test_core_classes test/test_core_classes.cpp src/policy_base.cpp src/vehicle_type_base.cpp src/mission_type_base.cpp src/payload_type_base.cpp)
+  target_include_directories(test_core_classes PUBLIC include)
+  ament_target_dependencies(test_core_classes rclcpp)
+  
+  # Regression tests
+  ament_add_gtest(test_regression test/test_regression.cpp src/policy_base.cpp src/vehicle_type_base.cpp src/mission_type_base.cpp src/payload_type_base.cpp)
+  target_include_directories(test_regression PUBLIC include)
+  ament_target_dependencies(test_regression rclcpp)
+  
+  # ROS 2 Integration tests (requires running system)
+  ament_add_gtest(test_ros2_integration test/test_ros2_integration.cpp)
+  target_include_directories(test_ros2_integration PUBLIC include)
+  ament_target_dependencies(test_ros2_integration rclcpp std_msgs)
+  rosidl_target_interfaces(test_ros2_integration ${PROJECT_NAME} "rosidl_typesupport_cpp")
+  
+  # Lint tests
   ament_lint_auto_find_test_dependencies()
 endif()
+
+# Install test files
+install(DIRECTORY test/
+  DESTINATION share/${PROJECT_NAME}/test/)
 
 ament_package() 
