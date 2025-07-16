@@ -21,6 +21,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MissionStatus.msg"
   "msg/VehicleCommand.msg"
   "msg/ImplementCommand.msg"
+  "msg/SprayerCommand.msg"
+  "msg/MowerCommand.msg"
+  "msg/SeederCommand.msg"
   "msg/PolicyState.msg"
   "srv/GetStatus.srv"
   "srv/ConfigureAdapter.srv"
@@ -66,6 +69,57 @@ ament_target_dependencies(mission_adapter_manager_node rclcpp std_msgs)
 rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
 target_link_libraries(mission_adapter_manager_node "${cpp_typesupport_target}")
 
+# Implement Adapters
+add_executable(sprayer_adapter_node src/adapters/sprayer_adapter.cpp)
+ament_target_dependencies(sprayer_adapter_node rclcpp std_msgs)
+target_include_directories(sprayer_adapter_node PUBLIC include)
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(sprayer_adapter_node "${cpp_typesupport_target}")
+
+add_executable(mower_adapter_node src/adapters/mower_adapter.cpp)
+ament_target_dependencies(mower_adapter_node rclcpp std_msgs)
+target_include_directories(mower_adapter_node PUBLIC include)
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(mower_adapter_node "${cpp_typesupport_target}")
+
+add_executable(seeder_adapter_node src/adapters/seeder_adapter.cpp)
+ament_target_dependencies(seeder_adapter_node rclcpp std_msgs)
+target_include_directories(seeder_adapter_node PUBLIC include)
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(seeder_adapter_node "${cpp_typesupport_target}")
+
+# Mission Classes
+add_executable(sprayer_mission_node src/missions/sprayer_mission.cpp src/mission_type_base.cpp)
+ament_target_dependencies(sprayer_mission_node rclcpp std_msgs)
+target_include_directories(sprayer_mission_node PUBLIC include)
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(sprayer_mission_node "${cpp_typesupport_target}")
+
+add_executable(mower_mission_node src/missions/mower_mission.cpp src/mission_type_base.cpp)
+ament_target_dependencies(mower_mission_node rclcpp std_msgs)
+target_include_directories(mower_mission_node PUBLIC include)
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(mower_mission_node "${cpp_typesupport_target}")
+
+add_executable(seeder_mission_node src/missions/seeder_mission.cpp src/mission_type_base.cpp)
+ament_target_dependencies(seeder_mission_node rclcpp std_msgs)
+target_include_directories(seeder_mission_node PUBLIC include)
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(seeder_mission_node "${cpp_typesupport_target}")
+
+# Policy Classes
+add_executable(teleop_only_policy_node src/policies/teleop_only_policy.cpp src/policy_base.cpp)
+ament_target_dependencies(teleop_only_policy_node rclcpp std_msgs)
+target_include_directories(teleop_only_policy_node PUBLIC include)
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(teleop_only_policy_node "${cpp_typesupport_target}")
+
+add_executable(adas_policy_node src/policies/adas_policy.cpp src/policy_base.cpp)
+ament_target_dependencies(adas_policy_node rclcpp std_msgs)
+target_include_directories(adas_policy_node PUBLIC include)
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(adas_policy_node "${cpp_typesupport_target}")
+
 # Install executables
 install(TARGETS
   system_manager_node
@@ -74,6 +128,14 @@ install(TARGETS
   telemetry_collector_node
   mission_service_node
   mission_adapter_manager_node
+  sprayer_adapter_node
+  mower_adapter_node
+  seeder_adapter_node
+  sprayer_mission_node
+  mower_mission_node
+  seeder_mission_node
+  teleop_only_policy_node
+  adas_policy_node
   DESTINATION lib/${PROJECT_NAME})
 
 # Install launch files

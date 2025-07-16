@@ -1,29 +1,43 @@
 # ROS 2 System Controller
 
-A comprehensive ROS 2 (Humble) C++ codebase implementing a modular system controller architecture with policy management, command arbitration, vehicle/mission adapters, and telemetry collection.
+A comprehensive ROS 2 (Humble) C++ codebase implementing a modular agricultural automation system with policy management, command arbitration, vehicle/implement adapters, mission business logic, and advanced safety features.
 
 ## Architecture Overview
 
-This system implements a distributed architecture with the following components:
+This system implements a sophisticated distributed architecture designed for agricultural automation with the following components:
 
 - **System Manager Node**: Manages multiple policy types and publishes policy commands
 - **Command Input Arbiter Node**: Arbitrates between policy, teleop, and autonomy commands
 - **Vehicle Adapter Manager Node**: Manages vehicle types and interfaces with vehicle hardware
+- **Implement Adapters**: Specialized nodes for agricultural equipment (SprayerAdapter, MowerAdapter, SeederAdapter)
+- **Mission Nodes**: Business logic controllers for field operations (SprayerMission, MowerMission, SeederMission)
+- **Policy Nodes**: Advanced policy management (TeleopOnlyPolicy, AdasPolicy)
 - **Telemetry Collector Node**: Collects and redistributes telemetry data
-- **Mission Service Node**: Manages mission types and publishes mission status
-- **Mission Adapter Manager Node**: Manages payload types and mission hardware
 
 ### Communication Flow
 
 ```
-System Manager → Policy Commands → Command Arbiter → Vehicle Adapter → Vehicle HW
-                                      ↓
-Telemetry Collector ← Vehicle Status ←
-       ↓
-Mission Service ← Mission Commands
-       ↓
-Mission Adapter → Mission HW
+System Manager → Policy Commands → Command Arbiter → Vehicle Commands → Vehicle Adapters → Vehicle HW
+                     ↓                                      ↓
+                Policy State                           Implement Commands
+                     ↓                                      ↓
+             Policy Enforcement                    Specific Adapters → Implement HW
+                     ↓                                      ↓
+            Mission Controllers ← Mission Status ← Business Logic Control
+                     ↓
+            Telemetry Collector ← Status Data ← Safety Monitoring
 ```
+
+### Specific Command Messages
+
+The system uses type-safe command messages for different implement types:
+
+- **VehicleCommand**: Steering, velocity, acceleration, safety controls
+- **SprayerCommand**: Chemical application, flow rates, boom control, environmental monitoring
+- **MowerCommand**: Cutting height, blade speed, patterns, terrain safety
+- **SeederCommand**: Seed rates, planting depth, soil conditions, fertilizer application
+- **ImplementCommand**: Base message for generic implement control
+- **PolicyState**: Operating modes, safety flags, constraints
 
 ## Prerequisites
 
@@ -32,6 +46,7 @@ Mission Adapter → Mission HW
 - C++ compiler (GCC 9+)
 - CMake 3.8+
 - colcon build tools
+- geometry_msgs package
 
 ### For Docker Development (Recommended for Mac)
 - Docker Desktop
@@ -126,23 +141,27 @@ ros2 launch system_controller demo.launch.py
 ```bash
 # In separate terminals (or tmux/screen sessions)
 
-# System Manager
+# Core System Nodes
 ros2 run system_controller system_manager_node
-
-# Command Arbiter
 ros2 run system_controller command_input_arbiter_node
-
-# Vehicle Adapter
 ros2 run system_controller vehicle_adapter_manager_node
-
-# Telemetry Collector
 ros2 run system_controller telemetry_collector_node
-
-# Mission Service
 ros2 run system_controller mission_service_node
-
-# Mission Adapter
 ros2 run system_controller mission_adapter_manager_node
+
+# Specific Implement Adapters
+ros2 run system_controller sprayer_adapter_node
+ros2 run system_controller mower_adapter_node
+ros2 run system_controller seeder_adapter_node
+
+# Mission Controllers
+ros2 run system_controller sprayer_mission_node
+ros2 run system_controller mower_mission_node
+ros2 run system_controller seeder_mission_node
+
+# Policy Controllers
+ros2 run system_controller teleop_only_policy_node
+ros2 run system_controller adas_policy_node
 ```
 
 ### 3. Testing Message Flow
@@ -156,12 +175,40 @@ ros2 topic pub /Teleop/Command std_msgs/String "data: 'emergency_stop'"
 # Send autonomy commands (medium priority)
 ros2 topic pub /Autonomy/Command std_msgs/String "data: 'autonomous_navigation'"
 
-# Send mission commands
-ros2 topic pub /MissionSel/Command std_msgs/String "data: 'start'"
+# Send vehicle commands
+ros2 topic pub /VehicleCommand system_controller/msg/VehicleCommand "{
+  steering_angle: 0.5,
+  velocity: 2.0,
+  acceleration: 0.1,
+  emergency_stop: false
+}"
 
-# Monitor topics
-ros2 topic echo /PolicyCommand
-ros2 topic echo /ArbitratedCommand
+# Send implement-specific commands
+ros2 topic pub /SprayerCommand system_controller/msg/SprayerCommand "{
+  base: {activate: true, raise: false},
+  chemical_type: 'herbicide',
+  application_rate: 10.5,
+  spray_pressure: 3.0
+}"
+
+ros2 topic pub /MowerCommand system_controller/msg/MowerCommand "{
+  base: {activate: true, raise: false},
+  cutting_height: 0.05,
+  blade_speed: 3000.0,
+  cutting_pattern: 'stripe'
+}"
+
+ros2 topic pub /SeederCommand system_controller/msg/SeederCommand "{
+  base: {activate: true, raise: false},
+  seed_rate: 50000.0,
+  planting_depth: 0.025,
+  seed_type: 'corn'
+}"
+
+# Monitor system topics
+ros2 topic echo /PolicyState
+ros2 topic echo /VehicleCommand
+ros2 topic echo /SprayerCommand
 ros2 topic echo /VehicleStatus
 ros2 topic echo /MissionStatus
 ```
@@ -172,6 +219,41 @@ ros2 topic echo /MissionStatus
 # Test status services
 ros2 service call /vehicle_adapter_status system_controller/srv/GetStatus "{component_id: 'vehicle'}"
 ros2 service call /mission_service_status system_controller/srv/GetStatus "{component_id: 'mission'}"
+
+# Test adapter configuration
+ros2 service call /configure_adapter system_controller/srv/ConfigureAdapter "{
+  adapter_id: 'sprayer_001',
+  parameter_name: 'max_pressure',
+  parameter_value: '5.0'
+}"
+```
+
+### 5. Testing Agricultural Scenarios
+
+```bash
+# Test spraying mission with weather monitoring
+ros2 topic pub /SprayerCommand system_controller/msg/SprayerCommand "{
+  base: {activate: true},
+  chemical_type: 'herbicide',
+  application_rate: 15.0,
+  environmental_monitoring: true
+}"
+
+# Test mowing with terrain adaptation
+ros2 topic pub /MowerCommand system_controller/msg/MowerCommand "{
+  base: {activate: true},
+  cutting_height: 0.08,
+  terrain_following: true,
+  cutting_pattern: 'spiral'
+}"
+
+# Test precision seeding
+ros2 topic pub /SeederCommand system_controller/msg/SeederCommand "{
+  base: {activate: true},
+  seed_rate: 65000.0,
+  planting_depth: 0.03,
+  variable_rate_seeding: true
+}"
 ```
 
 ## Monitoring and Debugging
@@ -185,11 +267,15 @@ ros2 topic list
 # List all nodes
 ros2 node list
 
-# Show topic info
-ros2 topic info /PolicyCommand
+# Show message structure
+ros2 interface show system_controller/msg/SprayerCommand
+ros2 interface show system_controller/msg/MowerCommand
+ros2 interface show system_controller/msg/SeederCommand
 
 # Monitor message flow
-ros2 topic hz /VehicleStatus
+ros2 topic hz /VehicleCommand
+ros2 topic hz /SprayerCommand
+ros2 topic hz /PolicyState
 ```
 
 ### RQT Tools (requires X11 forwarding)
@@ -204,98 +290,139 @@ rqt_topic  # Topic monitor
 rqt_service_caller  # Service testing
 ```
 
-## GUI Applications with X11 Forwarding (Optional)
-
-For running RViz2, RQT, and other GUI tools on Mac:
-
-### 1. Install XQuartz
-
-```bash
-# Install XQuartz using Homebrew
-brew install --cask xquartz
-
-# Start XQuartz and enable network connections
-open -a XQuartz
-# In XQuartz preferences: Security → "Allow connections from network clients"
-```
-
-### 2. Set Display Variable
-
-```bash
-# Get your IP address
-export DISPLAY=$(ipconfig getifaddr en0):0
-
-# Allow X11 forwarding
-xhost +localhost
-```
-
-### 3. Run GUI Applications
-
-```bash
-# Start with GUI profile
-docker-compose --profile gui up rviz2
-
-# Or in running container
-docker-compose exec ros2-system-controller rviz2
-```
-
 ## Package Structure
 
 ```
 src/system_controller/
-├── package.xml                 # Package metadata
-├── CMakeLists.txt             # Build configuration
-├── msg/                       # Custom message definitions
+├── package.xml                     # Package metadata with all dependencies
+├── CMakeLists.txt                 # Complete build configuration
+├── msg/                           # Enhanced message definitions
 │   ├── SystemCommand.msg
+│   ├── VehicleCommand.msg         # Vehicle control (steering, velocity, safety)
 │   ├── VehicleStatus.msg
+│   ├── ImplementCommand.msg       # Base implement control
+│   ├── SprayerCommand.msg         # Sprayer-specific commands
+│   ├── MowerCommand.msg           # Mower-specific commands
+│   ├── SeederCommand.msg          # Seeder-specific commands
+│   ├── PolicyState.msg            # Policy state and operating modes
 │   └── MissionStatus.msg
-├── srv/                       # Service definitions
-│   └── GetStatus.srv
-├── include/                   # Header files
-│   ├── policy_base.hpp
-│   ├── vehicle_type_base.hpp
-│   ├── mission_type_base.hpp
-│   └── payload_type_base.hpp
-├── src/                       # Implementation files
-│   ├── *.cpp                  # Node implementations
-│   └── *_base.cpp            # Class implementations
-└── launch/                    # Launch files
+├── srv/                           # Service definitions
+│   ├── GetStatus.srv
+│   └── ConfigureAdapter.srv       # Runtime adapter configuration
+├── include/                       # Header files
+│   ├── adapters/                  # Vehicle and implement adapters
+│   │   ├── vehicle_adapter_base.hpp
+│   │   ├── polaris_adapter.hpp
+│   │   ├── new_holland_adapter.hpp
+│   │   ├── implement_adapter_base.hpp
+│   │   ├── sprayer_adapter.hpp
+│   │   ├── mower_adapter.hpp
+│   │   └── seeder_adapter.hpp
+│   ├── missions/                  # Mission business logic
+│   │   ├── mission_base.hpp
+│   │   ├── sprayer_mission.hpp
+│   │   ├── mower_mission.hpp
+│   │   └── seeder_mission.hpp
+│   ├── policies/                  # Policy management
+│   │   ├── policy_base_expanded.hpp
+│   │   ├── teleop_only_policy.hpp
+│   │   └── adas_policy.hpp
+│   └── utils/                     # Utility classes
+│       ├── vehicle_adapter_factory.hpp
+│       └── mission_factory.hpp
+├── src/                           # Implementation files
+│   ├── adapters/                  # Adapter implementations
+│   │   ├── polaris_adapter.cpp
+│   │   ├── new_holland_adapter.cpp
+│   │   ├── sprayer_adapter.cpp
+│   │   ├── mower_adapter.cpp
+│   │   └── seeder_adapter.cpp
+│   ├── missions/                  # Mission implementations
+│   │   ├── sprayer_mission.cpp
+│   │   ├── mower_mission.cpp
+│   │   └── seeder_mission.cpp
+│   ├── policies/                  # Policy implementations
+│   │   ├── teleop_only_policy.cpp
+│   │   └── adas_policy.cpp
+│   ├── *.cpp                      # Core node implementations
+│   └── *_base.cpp                 # Base class implementations
+├── config/                        # Configuration files
+│   ├── vehicle_adapters.yaml     # Vehicle adapter configurations
+│   ├── missions.yaml             # Mission configurations
+│   └── policies.yaml             # Policy configurations
+└── launch/                        # Launch files
     ├── system_controller.launch.py
     └── demo.launch.py
 ```
 
-## Class Hierarchies
+## System Architecture
 
-### Policy Classes
-- `PolicyBase` (abstract)
-  - `Policy1`: Forward movement with variable speed
-  - `Policy2`: Turn-based navigation pattern
-  - `Policy3`: Aerial maneuvers and waypoint navigation
+### Vehicle Adapters
+- **PolarisAdapter**: CAN bus communication, Ackermann steering, heartbeat monitoring
+- **NewHollandAdapter**: Modbus RTU protocol, serial communication
+- **Plugin Architecture**: Factory pattern for runtime adapter loading
 
-### Vehicle Type Classes
-- `VehicleTypeBase` (abstract)
-  - `VehicleType1`: Ground vehicle (wheels, steering)
-  - `VehicleType2`: Aerial vehicle (rotors, hover)
+### Implement Adapters  
+- **SprayerAdapter**: Chemical application control, boom management, environmental monitoring
+- **MowerAdapter**: Cutting height control, blade management, terrain following
+- **SeederAdapter**: Variable rate seeding, soil monitoring, precision planting
 
-### Mission Type Classes
-- `MissionTypeBase` (abstract)
-  - `MissionType1`: Surveillance mission
-  - `MissionType2`: Delivery mission
+### Mission Controllers
+- **SprayerMission**: Weather monitoring, GPS accuracy, tree detection, turn sequences
+- **MowerMission**: Pattern execution (stripe/spiral/random), terrain adaptation
+- **SeederMission**: Variable rate application, soil condition monitoring, emergence tracking
 
-### Payload Type Classes
-- `PayloadTypeBase` (abstract)
-  - `PayloadType1`: Camera payload
-  - `PayloadType2`: Sensor package
+### Policy Management
+- **TeleopOnlyPolicy**: Manual control enforcement, operator presence, dead-man switch
+- **AdasPolicy**: Collision avoidance, lane keeping, adaptive cruise, tree detection
+- **Operating Modes**: TELEOP_ONLY, AUTONOMOUS, SEMI_AUTONOMOUS, ADAS_ASSISTED, SAFETY_OVERRIDE
 
 ## Key Features
 
-- **Modular Architecture**: Each component is a separate node
-- **Plugin-like System**: Easy to add new policy/vehicle/mission/payload types
-- **Command Arbitration**: Priority-based command selection
-- **Comprehensive Logging**: Message flow visibility
-- **Docker Support**: Easy development on Mac
-- **Service Interface**: Status monitoring and control
-- **Custom Messages**: Structured communication
+- **Type-Safe Commands**: Specific message types for each implement type
+- **Modular Architecture**: Each component is a separate, pluggable node
+- **Advanced Safety Systems**: Multiple intervention layers and emergency stop
+- **Business Logic Integration**: Agricultural-specific mission controllers
+- **Plugin-Based Design**: Easy to add new vehicles, implements, missions, policies
+- **Command Arbitration**: Priority-based command selection with safety filtering
+- **Comprehensive Configuration**: YAML-based system configuration
+- **Environmental Monitoring**: Weather, GPS, soil condition integration
+- **Real-time Adaptation**: Dynamic parameter adjustment and error recovery
+- **Docker Support**: Easy development and deployment on any platform
+
+## Agricultural Use Cases
+
+### Precision Spraying
+- GPS-guided herbicide/pesticide application
+- Weather condition monitoring (wind speed, temperature)
+- Tree detection with automatic spray pause
+- Buffer zone management around sensitive areas
+- Variable rate application based on field mapping
+
+### Autonomous Mowing
+- Multiple cutting patterns (stripe, spiral, random)
+- Terrain-following blade height adjustment
+- Operator presence monitoring for safety
+- Obstacle detection and avoidance
+- Turn sequence optimization
+
+### Precision Seeding
+- Variable rate seeding based on soil conditions
+- GPS-guided row spacing and depth control
+- Soil moisture and temperature monitoring
+- Fertilizer application integration
+- Emergence tracking and reporting
+
+## Safety Features
+
+- **Emergency Stop**: Immediate system shutdown from any node
+- **Tree Detection**: Automatic implement pause near obstacles
+- **GPS Monitoring**: Mission pause on accuracy loss
+- **Weather Integration**: Operation suspension in adverse conditions
+- **Operator Presence**: Dead-man switch and proximity monitoring
+- **Geofencing**: Restricted area enforcement
+- **Command Filtering**: Policy-based safety intervention
+- **Heartbeat Monitoring**: Communication failure detection
 
 ## Troubleshooting
 
@@ -303,8 +430,9 @@ src/system_controller/
 
 1. **Container won't start**: Check Docker Desktop is running
 2. **Build failures**: Ensure all dependencies are installed with `rosdep`
-3. **No GUI**: Verify XQuartz is running and DISPLAY is set
-4. **Permission errors**: Check Docker volume mount permissions
+3. **Missing messages**: Check that geometry_msgs is installed
+4. **Adapter not found**: Verify adapter registration in factory
+5. **Communication errors**: Check port permissions and hardware connections
 
 ### Debug Commands
 
@@ -313,13 +441,20 @@ src/system_controller/
 printenv | grep ROS
 
 # Verify message definitions
-ros2 interface show system_controller/msg/SystemCommand
+ros2 interface show system_controller/msg/SprayerCommand
+ros2 interface show system_controller/msg/MowerCommand
+ros2 interface show system_controller/msg/SeederCommand
 
 # Test node connectivity
-ros2 node info /system_manager
+ros2 node info /sprayer_adapter_node
+ros2 node info /sprayer_mission_node
 
 # Monitor system resources
 htop  # Inside container
+
+# Check topic communication
+ros2 topic hz /SprayerCommand
+ros2 topic echo /PolicyState --once
 ```
 
 ### Apple Silicon Specific
@@ -338,10 +473,11 @@ docker run --rm ros2-system-controller uname -m
 
 ### Adding New Components
 
-1. **New Policy**: Extend `PolicyBase` in `include/policy_base.hpp`
-2. **New Vehicle Type**: Extend `VehicleTypeBase` in `include/vehicle_type_base.hpp`
-3. **New Mission Type**: Extend `MissionTypeBase` in `include/mission_type_base.hpp`
-4. **New Payload Type**: Extend `PayloadTypeBase` in `include/payload_type_base.hpp`
+1. **New Vehicle Adapter**: Extend `VehicleAdapterBase` and register with factory
+2. **New Implement Adapter**: Extend `ImplementAdapterBase` for your equipment type
+3. **New Mission Type**: Extend `MissionBase` with your business logic
+4. **New Policy**: Extend `PolicyBaseExpanded` with your control strategy
+5. **New Messages**: Add implement-specific command messages as needed
 
 ### Build and Test Cycle
 
@@ -349,15 +485,49 @@ docker run --rm ros2-system-controller uname -m
 # Inside container
 colcon build --packages-select system_controller
 source install/setup.bash
+
+# Test specific components
+ros2 run system_controller sprayer_adapter_node
+ros2 topic pub /SprayerCommand system_controller/msg/SprayerCommand "{...}"
+
+# Full system test
 ros2 launch system_controller demo.launch.py
 ```
+
+### Configuration Development
+
+Update YAML files for your specific equipment:
+
+```yaml
+# config/vehicle_adapters.yaml - Add your vehicle
+your_vehicle:
+  adapter_type: "your_vehicle_type"
+  communication_port: "/dev/your_port"
+  custom_params:
+    max_speed: 10.0
+
+# config/missions.yaml - Add your mission
+your_mission:
+  mission_type: "your_mission_type"
+  required_implements: ["your_implement"]
+  safety_constraints:
+    max_wind_speed: 15.0
+```
+
+## Documentation
+
+- **ADAPTER_POLICY_GUIDE.md**: Comprehensive guide for adding new adapters, missions, and policies
+- **Source Code Comments**: Detailed inline documentation
+- **Configuration Examples**: YAML configuration templates
+- **Integration Examples**: Real-world usage scenarios
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make changes and test thoroughly
-4. Submit a pull request
+3. Add comprehensive tests for your changes
+4. Update documentation
+5. Submit a pull request with detailed description
 
 ## License
 

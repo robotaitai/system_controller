@@ -1,4 +1,4 @@
-# ImplementCommand.msg - Standard implement command message for mission control
+# ImplementCommand.msg - Base implement command message for generic control
 std_msgs/Header header
 
 # Implement identification
@@ -9,22 +9,6 @@ string implement_id           # Unique implement identifier
 bool activate                 # Activate/deactivate implement
 bool raise                    # Raise implement (true) or lower (false)
 float64 height_position       # Specific height position (meters)
-
-# Sprayer specific commands
-bool valve_open              # Open/close valve for sprayers
-float64 spray_rate           # Spray rate (L/min or similar)
-float64 spray_pressure       # Spray pressure (bar)
-string chemical_type         # Type of chemical being sprayed
-
-# Mower specific commands  
-float64 cutting_height       # Cutting height in meters
-float64 blade_speed          # Blade rotation speed (RPM)
-bool side_discharge          # Enable side discharge
-
-# Seeder specific commands
-float64 seed_rate            # Seeding rate (seeds/meter or kg/ha)
-float64 planting_depth       # Planting depth in meters
-bool metering_enable         # Enable seed metering
 
 # Safety and status
 bool emergency_stop          # Emergency stop for implement

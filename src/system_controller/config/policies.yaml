@@ -1,0 +1,242 @@
+# Policy Configuration
+# This file defines available policies and their settings for agricultural automation
+
+policies:
+
+  # Teleop Only Policy - Manual control with safety features
+  teleop_only:
+    policy_type: "teleop_only_policy"
+    description: "Manual control policy with operator safety requirements"
+    priority: 1  # Highest priority for safety
+    config:
+      require_dead_man_switch: true
+      operator_timeout: 5.0         # seconds before timeout
+      max_speed_without_operator: 2.0  # m/s when operator presence questionable
+      emergency_stop_on_timeout: true
+      heartbeat_interval: 500       # milliseconds
+      operator_presence_sensors:
+        - "seat_pressure_sensor"
+        - "dead_man_switch"
+        - "cabin_presence_detector"
+      geofencing:
+        enabled: true
+        boundary_buffer: 5.0        # meters from field boundaries
+        restricted_zones:
+          - name: "maintenance_area"
+            center: [0.0, 0.0]       # GPS coordinates
+            radius: 10.0             # meters
+          - name: "fuel_station"
+            center: [100.0, 50.0]
+            radius: 15.0
+      speed_limits:
+        default_max_speed: 8.0      # m/s (about 29 km/h)
+        turn_max_speed: 3.0         # m/s for turns
+        near_obstacles_speed: 1.0   # m/s when obstacles detected
+      implement_restrictions:
+        require_operator_for_activation: true
+        auto_raise_on_timeout: true
+        emergency_stop_implements: true
+
+  # ADAS Policy - Advanced Driver Assistance with intelligent features  
+  adas_assistance:
+    policy_type: "adas_policy"
+    description: "Advanced driver assistance with collision avoidance and intelligent monitoring"
+    priority: 2
+    config:
+      collision_avoidance_enabled: true
+      lane_keeping_enabled: true
+      adaptive_cruise_enabled: true
+      tree_detection_enabled: true
+      gps_monitoring_enabled: true
+      weather_monitoring_enabled: true
+      intervention_thresholds:
+        collision_distance: 5.0       # meters - stop vehicle
+        warning_distance: 10.0        # meters - warn operator
+        lane_deviation: 0.5           # meters from planned path
+        gps_accuracy_limit: 0.2       # meters - pause if worse
+        wind_speed_limit: 20.0        # m/s - pause operations
+        precipitation_limit: 1.0      # mm/hr - pause operations
+      speed_adjustments:
+        base_max_speed: 15.0          # m/s
+        obstacle_speed_reduction: 0.7  # multiply by this factor
+        poor_gps_speed_reduction: 0.5
+        weather_speed_reduction: 0.8
+        turn_speed_reduction: 0.6
+      implement_control:
+        auto_pause_near_trees: true
+        auto_adjust_height: true
+        variable_rate_enabled: true
+        section_control_enabled: true
+      monitoring_systems:
+        obstacle_detection:
+          lidar_enabled: true
+          camera_enabled: true
+          radar_enabled: true
+          detection_range: 15.0       # meters
+        gps_systems:
+          rtk_enabled: true
+          required_satellites: 8
+          accuracy_threshold: 0.05    # meters
+        weather_station:
+          wind_monitoring: true
+          precipitation_monitoring: true
+          temperature_monitoring: true
+
+  # Field Safety Policy - Comprehensive field operation safety
+  field_safety:
+    policy_type: "field_safety_policy"
+    description: "Comprehensive safety policy for field operations"
+    priority: 3
+    config:
+      max_speed_near_obstacles: 3.0    # m/s
+      obstacle_detection_range: 10.0   # meters
+      boundary_buffer_distance: 5.0    # meters
+      min_gps_accuracy: 0.1            # meters
+      require_operator_presence: false # Can operate autonomously
+      max_implement_height: 2.0        # meters above ground
+      safe_turning_radius: 10.0        # meters
+      environmental_limits:
+        max_wind_speed: 15.0           # m/s
+        min_temperature: -5.0          # celsius
+        max_temperature: 40.0          # celsius
+        max_slope: 15.0                # degrees
+        min_soil_moisture: 10.0        # percentage
+        max_soil_moisture: 80.0        # percentage
+      buffer_zones:
+        waterways: 5.0                 # meters
+        roads: 10.0                    # meters
+        buildings: 20.0                # meters
+        residential: 100.0             # meters
+        sensitive_crops: 15.0          # meters
+      implement_safety:
+        auto_height_adjustment: true
+        section_control: true
+        pressure_monitoring: true
+        flow_monitoring: true
+        blockage_detection: true
+
+  # Autonomous Operation Policy - Full autonomous field operations
+  autonomous_operation:
+    policy_type: "autonomous_policy"
+    description: "Full autonomous operation for field missions"
+    priority: 4
+    config:
+      require_mission_plan: true
+      gps_accuracy_required: 0.05      # meters (RTK level)
+      weather_monitoring: true
+      obstacle_avoidance: true
+      path_planning_enabled: true
+      emergency_response:
+        auto_return_to_base: true
+        emergency_contact_enabled: true
+        auto_implement_shutdown: true
+      operational_constraints:
+        daylight_only: false           # Can operate at night
+        weather_dependent: true
+        operator_supervision: false    # Fully autonomous
+        max_continuous_hours: 12.0     # hours before mandatory break
+      mission_capabilities:
+        spraying_missions: true
+        mowing_missions: true
+        seeding_missions: true
+        cultivation_missions: false    # Not yet implemented
+        harvesting_missions: false    # Not yet implemented
+      communication:
+        base_station_required: true
+        cellular_backup: true
+        satellite_communication: false
+        heartbeat_interval: 30         # seconds
+      data_logging:
+        gps_tracking: true
+        implement_performance: true
+        environmental_conditions: true
+        operator_interventions: true
+
+  # Research/Development Policy - For testing and development
+  research_development:
+    policy_type: "research_policy"
+    description: "Development and testing policy with relaxed constraints"
+    priority: 5
+    config:
+      safety_overrides_allowed: true
+      debug_mode_enabled: true
+      data_collection_enhanced: true
+      operator_override_always: true
+      test_parameters:
+        allow_boundary_violations: false  # Still enforce boundaries
+        allow_speed_violations: false     # Still enforce speed limits
+        log_all_commands: true
+        simulate_failures: false
+      development_features:
+        algorithm_testing: true
+        sensor_calibration: true
+        machine_learning_training: true
+        performance_benchmarking: true
+      safety_minimums:
+        min_gps_accuracy: 1.0            # meters (relaxed)
+        max_test_speed: 5.0              # m/s (limited for safety)
+        require_supervisor: true         # Always need supervisor present
+        emergency_stop_override: false   # Cannot override emergency stop
+
+# Policy Selection Rules
+policy_selection:
+  # Default policy for different operational modes
+  default_policies:
+    manual_mode: "teleop_only"
+    assisted_mode: "adas_assistance"
+    autonomous_mode: "autonomous_operation"
+    field_operations: "field_safety"
+    development_mode: "research_development"
+    
+  # Automatic policy switching based on conditions
+  automatic_switching:
+    enabled: true
+    rules:
+      - condition: "gps_accuracy_poor"
+        switch_to: "teleop_only"
+        threshold: 0.5                    # meters
+      - condition: "weather_adverse"
+        switch_to: "teleop_only"
+        wind_threshold: 25.0              # m/s
+      - condition: "obstacle_detected"
+        switch_to: "adas_assistance"
+        distance_threshold: 8.0           # meters
+      - condition: "operator_absent"
+        switch_to: "autonomous_operation"
+        timeout: 60.0                     # seconds
+      - condition: "emergency_declared"
+        switch_to: "teleop_only"
+        immediate: true
+
+# Global Safety Parameters (apply to all policies)
+global_safety:
+  emergency_stop:
+    wireless_range: 100.0                # meters
+    auto_trigger_conditions:
+      - "collision_imminent"
+      - "system_failure"
+      - "communication_lost"
+      - "operator_emergency"
+    response_time_limit: 500             # milliseconds
+  
+  geofencing:
+    global_boundaries: true
+    override_allowed: false              # Cannot override global boundaries
+    emergency_zones:
+      - name: "maintenance_bay"
+        polygon: [[0,0], [10,0], [10,10], [0,10]]  # GPS coordinates
+        access_level: "authorized_only"
+      - name: "chemical_storage"
+        polygon: [[50,50], [60,50], [60,60], [50,60]]
+        access_level: "prohibited"
+  
+  communication:
+    base_station_heartbeat: 10.0         # seconds
+    backup_communication_timeout: 30.0   # seconds
+    emergency_beacon: true
+    
+  data_protection:
+    encrypt_communications: true
+    log_retention_days: 90
+    anonymize_location_data: false       # Keep for safety analysis
+    backup_critical_data: true 
