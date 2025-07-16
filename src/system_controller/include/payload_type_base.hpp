@@ -14,8 +14,8 @@ public:
     virtual void activate() = 0;
     virtual void deactivate() = 0;
     virtual std::string getStatus() = 0;
-    virtual void processCommand(const std::string& command) {}
-    virtual void configure(const std::string& config) {}
+    virtual void processCommand(const std::string& /*command*/) {}
+    virtual void configure(const std::string& /*config*/) {}
     
     std::string getName() const { return name_; }
     bool isActive() const { return active_; }

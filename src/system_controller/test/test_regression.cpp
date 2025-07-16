@@ -5,6 +5,7 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <numeric>
 
 #include "../include/policy_base.hpp"
 #include "../include/vehicle_type_base.hpp"
