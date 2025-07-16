@@ -1,0 +1,65 @@
+# Vehicle Adapter Configuration
+# This file defines the available vehicle adapters and their configurations
+
+vehicle_adapters:
+  
+  # Polaris Vehicle Adapter Configuration
+  polaris_ranger:
+    adapter_type: "polaris"
+    adapter_id: "polaris_ranger_001"
+    communication_port: "can0"
+    baudrate: 500000
+    max_steering_angle: 1.57  # radians (90 degrees)
+    max_velocity: 15.0        # m/s
+    steering_scale: 1.0
+    velocity_scale: 1.0
+    steering_offset: 0.0
+    velocity_offset: 0.0
+    timeout_ms: 1000
+    enable_safety_checks: true
+    custom_params:
+      can_interface: "can0"
+      gear_ratio: 15.7
+      wheel_base: 2.5
+      heartbeat_interval_ms: 100
+      use_ackermann: true
+
+  # New Holland Tractor Adapter Configuration
+  new_holland_t7:
+    adapter_type: "new_holland"
+    adapter_id: "new_holland_t7_001"
+    communication_port: "/dev/ttyUSB0"
+    baudrate: 38400
+    max_steering_angle: 1.2   # radians
+    max_velocity: 25.0        # m/s (90 km/h max)
+    steering_scale: 1.0
+    velocity_scale: 0.8       # Scale down for safety
+    steering_offset: 0.0
+    velocity_offset: 0.0
+    timeout_ms: 500
+    enable_safety_checks: true
+    custom_params:
+      serial_port: "/dev/ttyUSB0"
+      device_address: 1
+      response_timeout_ms: 500
+      implement_width: 12.0
+      max_ground_speed: 25.0
+      use_modbus_rtu: true
+
+# Default adapter selection
+default_adapter: "polaris_ranger"
+
+# Adapter auto-detection settings
+auto_detection:
+  enabled: true
+  timeout_ms: 5000
+  preferred_order:
+    - "polaris_ranger"
+    - "new_holland_t7"
+
+# Safety settings that apply to all adapters
+global_safety:
+  emergency_stop_timeout_ms: 100
+  max_consecutive_errors: 10
+  communication_timeout_ms: 5000
+  heartbeat_required: true 

@@ -1,0 +1,154 @@
+# Mission Configuration
+# This file defines available missions and their implement requirements
+
+missions:
+
+  # Herbicide Spraying Mission
+  herbicide_spraying:
+    mission_type: "sprayer"
+    description: "Herbicide application mission"
+    required_implements:
+      - "boom_sprayer_24m"
+      - "chemical_tank_1000L"
+    default_config:
+      field_area: 50.0          # hectares
+      working_width: 24.0       # meters
+      overlap: 0.05            # 5% overlap
+      target_speed: 15.0       # km/h
+      application_rate: 200.0  # L/ha
+      spray_pressure: 3.0      # bar
+      boom_height: 0.5         # meters
+      max_wind_speed: 15.0     # km/h
+      buffer_zone_distance: 10.0 # meters
+      gps_accuracy_threshold: 0.1 # meters
+
+  # Pesticide Spraying Mission  
+  pesticide_spraying:
+    mission_type: "sprayer"
+    description: "Pesticide application mission"
+    required_implements:
+      - "boom_sprayer_24m" 
+      - "chemical_tank_1000L"
+    default_config:
+      field_area: 30.0
+      working_width: 24.0
+      overlap: 0.1             # 10% overlap for pesticides
+      target_speed: 12.0       # slower for precision
+      application_rate: 150.0  # L/ha
+      spray_pressure: 2.5      # bar
+      boom_height: 0.4         # meters
+      max_wind_speed: 10.0     # stricter wind limits
+      buffer_zone_distance: 20.0 # larger buffer zones
+      gps_accuracy_threshold: 0.05 # higher precision
+
+  # Mowing Mission
+  grass_mowing:
+    mission_type: "mower"
+    description: "Grass cutting mission"
+    required_implements:
+      - "rotary_mower_6m"
+    default_config:
+      field_area: 100.0
+      working_width: 6.0
+      overlap: 0.02            # 2% overlap
+      target_speed: 20.0       # km/h
+      cutting_height: 0.05     # meters (5cm)
+      blade_speed: 3000        # RPM
+      side_discharge: true
+      max_slope: 15.0          # degrees
+
+  # Seeding Mission
+  corn_seeding:
+    mission_type: "seeder"
+    description: "Corn seeding mission"
+    required_implements:
+      - "precision_seeder_12m"
+      - "seed_hopper_2000kg"
+    default_config:
+      field_area: 80.0
+      working_width: 12.0
+      overlap: 0.0            # No overlap for seeding
+      target_speed: 10.0      # km/h
+      seed_rate: 75000        # seeds/ha
+      planting_depth: 0.05    # meters
+      row_spacing: 0.75       # meters
+      gps_accuracy_threshold: 0.02 # high precision required
+
+# Implement Adapter Configuration
+implement_adapters:
+
+  # Boom Sprayer (24m)
+  boom_sprayer_24m:
+    adapter_type: "sprayer"
+    adapter_id: "boom_sprayer_001"
+    communication_port: "/dev/ttyUSB1"
+    baudrate: 115200
+    max_flow_rate: 500.0     # L/min
+    max_pressure: 10.0       # bar
+    min_height: 0.3          # meters
+    max_height: 2.0          # meters
+    timeout_ms: 1000
+    custom_params:
+      boom_width: 24.0
+      nozzle_count: 48
+      nozzle_spacing: 0.5
+      tank_capacity: 1000.0
+
+  # Chemical Tank (1000L)
+  chemical_tank_1000L:
+    adapter_type: "tank"
+    adapter_id: "chemical_tank_001"
+    communication_port: "/dev/ttyUSB2"
+    baudrate: 9600
+    custom_params:
+      capacity: 1000.0
+      fill_sensor: true
+      level_sensor: true
+      agitation_pump: true
+
+  # Rotary Mower (6m)
+  rotary_mower_6m:
+    adapter_type: "mower"
+    adapter_id: "rotary_mower_001"
+    communication_port: "/dev/ttyUSB3"
+    baudrate: 115200
+    min_height: 0.02         # meters (2cm)
+    max_height: 0.15         # meters (15cm)
+    custom_params:
+      cutting_width: 6.0
+      blade_count: 6
+      max_blade_speed: 3500
+      safety_switches: 4
+
+  # Precision Seeder (12m)
+  precision_seeder_12m:
+    adapter_type: "seeder"
+    adapter_id: "precision_seeder_001"
+    communication_port: "/dev/ttyUSB4"
+    baudrate: 115200
+    custom_params:
+      working_width: 12.0
+      row_count: 16
+      row_spacing: 0.75
+      seed_metering: "vacuum"
+      depth_control: "hydraulic"
+
+# Mission Safety Configuration
+mission_safety:
+  global_constraints:
+    min_gps_accuracy: 0.2    # meters
+    max_wind_speed: 25.0     # km/h
+    min_visibility: 50.0     # meters
+    max_slope: 20.0          # degrees
+    buffer_zone_default: 5.0 # meters
+    
+  sprayer_specific:
+    chemical_level_threshold: 10.0  # percentage
+    pressure_tolerance: 0.5         # bar
+    boom_stability_check: true
+    drift_monitoring: true
+    
+  mower_specific:
+    obstacle_detection: true
+    blade_monitoring: true
+    discharge_chute_check: true 

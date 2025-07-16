@@ -1,0 +1,15 @@
+# ConfigureAdapter.srv - Service for configuring vehicle/implement adapters
+
+# Request
+string adapter_type              # Type of adapter (vehicle/implement)
+string adapter_id               # Specific adapter ID
+string[] parameter_names        # Parameter names to configure
+string[] parameter_values       # Parameter values (as strings)
+
+---
+
+# Response
+bool success                    # Configuration successful
+string message                  # Status/error message
+string[] configured_parameters  # Successfully configured parameters
+string[] failed_parameters     # Failed parameter configurations 
