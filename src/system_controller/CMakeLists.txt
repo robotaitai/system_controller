@@ -20,7 +20,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/VehicleStatus.msg" 
   "msg/MissionStatus.msg"
   "srv/GetStatus.srv"
-  DEPENDENCIES builtin_interfaces std_msgs
+  DEPENDENCIES builtin_interfaces std_msgs geometry_msgs
 )
 
 # Create include directories
@@ -29,32 +29,38 @@ include_directories(include)
 # System Manager Node
 add_executable(system_manager_node src/system_manager_node.cpp src/policy_base.cpp)
 ament_target_dependencies(system_manager_node rclcpp std_msgs)
-rosidl_target_interfaces(system_manager_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(system_manager_node "${cpp_typesupport_target}")
 
 # Command Input Arbiter Node
 add_executable(command_input_arbiter_node src/command_input_arbiter_node.cpp)
 ament_target_dependencies(command_input_arbiter_node rclcpp std_msgs)
-rosidl_target_interfaces(command_input_arbiter_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(command_input_arbiter_node "${cpp_typesupport_target}")
 
 # Vehicle Adapter Manager Node
 add_executable(vehicle_adapter_manager_node src/vehicle_adapter_manager_node.cpp src/vehicle_type_base.cpp)
 ament_target_dependencies(vehicle_adapter_manager_node rclcpp std_msgs)
-rosidl_target_interfaces(vehicle_adapter_manager_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(vehicle_adapter_manager_node "${cpp_typesupport_target}")
 
 # Telemetry Collector Node
 add_executable(telemetry_collector_node src/telemetry_collector_node.cpp)
 ament_target_dependencies(telemetry_collector_node rclcpp std_msgs sensor_msgs)
-rosidl_target_interfaces(telemetry_collector_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(telemetry_collector_node "${cpp_typesupport_target}")
 
 # Mission Service Node
 add_executable(mission_service_node src/mission_service_node.cpp src/mission_type_base.cpp)
 ament_target_dependencies(mission_service_node rclcpp std_msgs)
-rosidl_target_interfaces(mission_service_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(mission_service_node "${cpp_typesupport_target}")
 
 # Mission Adapter Manager Node
 add_executable(mission_adapter_manager_node src/mission_adapter_manager_node.cpp src/payload_type_base.cpp)
 ament_target_dependencies(mission_adapter_manager_node rclcpp std_msgs)
-rosidl_target_interfaces(mission_adapter_manager_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(mission_adapter_manager_node "${cpp_typesupport_target}")
 
 # Install executables
 install(TARGETS
@@ -89,7 +95,8 @@ if(BUILD_TESTING)
   ament_add_gtest(test_ros2_integration test/test_ros2_integration.cpp)
   target_include_directories(test_ros2_integration PUBLIC include)
   ament_target_dependencies(test_ros2_integration rclcpp std_msgs)
-  rosidl_target_interfaces(test_ros2_integration ${PROJECT_NAME} "rosidl_typesupport_cpp")
+  rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+  target_link_libraries(test_ros2_integration "${cpp_typesupport_target}")
   
   # Lint tests
   ament_lint_auto_find_test_dependencies()
